@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import Link from "next/link";
 import { motion } from "framer-motion";
 import { useUser } from "@auth0/nextjs-auth0/client";
 import { useCart } from "@/context/CartContext";
@@ -16,7 +17,7 @@ export default function Header() {
       transition={{ duration: 0.4, ease: "easeOut" }}
       className="sticky top-0 z-40 flex items-center justify-between border-b border-gray-200 bg-white px-6 py-3"
     >
-      <a href="/" className="flex items-center">
+      <Link href="/" className="flex items-center">
         <Image
           src="/pizza42textsliceinline.png"
           alt="Pizza 42"
@@ -25,7 +26,7 @@ export default function Header() {
           className="h-10 w-auto"
           priority
         />
-      </a>
+      </Link>
 
       <div className="flex items-center gap-5">
         {!isLoading && user ? (

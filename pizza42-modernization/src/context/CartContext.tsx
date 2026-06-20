@@ -13,6 +13,7 @@ type CartContextValue = {
   addItem: (item: MenuItem) => void;
   removeItem: (id: string) => void;
   updateQuantity: (id: string, quantity: number) => void;
+  clearCart: () => void;
   totalCount: number;
   subtotal: number;
   isOpen: boolean;
@@ -53,6 +54,8 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     );
   };
 
+  const clearCart = () => setLines([]);
+
   const totalCount = useMemo(
     () => lines.reduce((sum, line) => sum + line.quantity, 0),
     [lines]
@@ -70,6 +73,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
         addItem,
         removeItem,
         updateQuantity,
+        clearCart,
         totalCount,
         subtotal,
         isOpen,

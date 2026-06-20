@@ -1,12 +1,41 @@
 "use client";
 
+import { useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { useUser } from "@auth0/nextjs-auth0/client";
 import { useCart } from "@/context/CartContext";
 
 export default function CartDrawer() {
-  const { lines, updateQuantity, subtotal, isOpen, closeCart } = useCart();
+  const { lines, updateQuantity, subtotal, clearCart, isOpen, closeCart } = useCart();
   const { user } = useUser();
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const handleCheckout = async () => {
+    setIsSubmitting(true);
+    try {
+      const response = await fetch("/api/order", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          items: lines.map((l) => ({ name: l.item.name, qty: l.quantity })),
+          total: subtotal,
+        }),
+      });
+
+      const data = await response.json();
+      if (response.ok) {
+        alert(`🍕 Order placed! Order ID: ${data.order.orderId}`);
+        clearCart();
+        closeCart();
+      } else {
+        alert(`❌ Order failed: ${data.error}`);
+      }
+    } catch {
+      alert("❌ Network request failed.");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   return (
     <AnimatePresence>
@@ -79,10 +108,15 @@ export default function CartDrawer() {
 
               {user ? (
                 <button
-                  disabled={lines.length === 0}
+                  disabled={lines.length === 0 || !user.email_verified || isSubmitting}
+                  onClick={handleCheckout}
                   className="w-full rounded-full bg-red-600 py-3 text-sm font-bold text-white transition-opacity hover:opacity-90 disabled:opacity-40"
                 >
-                  Place Order &middot; ${subtotal.toFixed(2)}
+                  {isSubmitting
+                    ? "Processing Order..."
+                    : user.email_verified
+                      ? `Place Order · $${subtotal.toFixed(2)}`
+                      : "Verify Email to Place Order 🔒"}
                 </button>
               ) : (
                 <a
