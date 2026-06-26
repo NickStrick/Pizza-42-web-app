@@ -4,11 +4,19 @@ import { useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { useUser } from "@auth0/nextjs-auth0/client";
 import { useCart } from "@/context/CartContext";
+import { useOrderHistory } from "@/context/OrderHistoryContext";
+import type { OrderHistoryEntry } from "@/lib/claims";
+
+type OrderResult =
+  | { status: "success"; order: OrderHistoryEntry }
+  | { status: "error"; message: string };
 
 export default function CartDrawer() {
   const { lines, updateQuantity, subtotal, clearCart, isOpen, closeCart } = useCart();
   const { user } = useUser();
+  const { addOrder } = useOrderHistory();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [orderResult, setOrderResult] = useState<OrderResult | null>(null);
 
   const handleCheckout = async () => {
     setIsSubmitting(true);
@@ -24,14 +32,15 @@ export default function CartDrawer() {
 
       const data = await response.json();
       if (response.ok) {
-        alert(`🍕 Order placed! Order ID: ${data.order.orderId}`);
+        addOrder(data.order);
         clearCart();
         closeCart();
+        setOrderResult({ status: "success", order: data.order });
       } else {
-        alert(`❌ Order failed: ${data.error}`);
+        setOrderResult({ status: "error", message: data.error });
       }
     } catch {
-      alert("❌ Network request failed.");
+      setOrderResult({ status: "error", message: "Network request failed." });
     } finally {
       setIsSubmitting(false);
     }
@@ -130,6 +139,92 @@ export default function CartDrawer() {
           </motion.div>
         </div>
       )}
+
+      {orderResult && (
+        <OrderResultModal result={orderResult} onClose={() => setOrderResult(null)} />
+      )}
     </AnimatePresence>
+  );
+}
+
+function OrderResultModal({
+  result,
+  onClose,
+}: {
+  result: OrderResult;
+  onClose: () => void;
+}) {
+  const isSuccess = result.status === "success";
+
+  return (
+    <div className="fixed inset-0 z-60 flex items-center justify-center px-4">
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        transition={{ duration: 0.2 }}
+        className="absolute inset-0 bg-black/40"
+        onClick={onClose}
+      />
+
+      <motion.div
+        initial={{ opacity: 0, scale: 0.95, y: 8 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        exit={{ opacity: 0, scale: 0.95, y: 8 }}
+        transition={{ duration: 0.2, ease: "easeOut" }}
+        className="relative w-full max-w-sm rounded-2xl bg-white p-6 text-center shadow-xl"
+      >
+        <div
+          className={`mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full text-2xl ${
+            isSuccess ? "bg-green-100" : "bg-red-100"
+          }`}
+        >
+          {isSuccess ? "🍕" : "❌"}
+        </div>
+
+        <h2 className="mb-1 text-lg font-bold text-gray-900">
+          {isSuccess ? "Order placed!" : "Order failed"}
+        </h2>
+
+        {isSuccess ? (
+          <>
+            <p className="mb-4 text-sm font-semibold text-red-600">
+              Ready by {new Date(result.order.readyAt).toLocaleTimeString([], {
+                hour: "numeric",
+                minute: "2-digit",
+              })}
+            </p>
+
+            <div className="mb-5 rounded-xl bg-gray-50 p-4 text-left">
+              <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-gray-500">
+                Order Summary
+              </p>
+              <ul className="mb-3 flex flex-col gap-1">
+                {result.order.items.map((item, i) => (
+                  <li key={i} className="flex justify-between text-sm text-gray-700">
+                    <span>{item.qty}x {item.name}</span>
+                  </li>
+                ))}
+              </ul>
+              <div className="flex justify-between border-t border-gray-200 pt-2 text-sm font-bold text-gray-900">
+                <span>Total</span>
+                <span>${result.order.total.toFixed(2)}</span>
+              </div>
+              <p className="mt-3 text-xs text-gray-500">📍 {result.order.location}</p>
+              <p className="mt-1 text-xs text-gray-400">Order ID: {result.order.orderId}</p>
+            </div>
+          </>
+        ) : (
+          <p className="mb-5 text-sm text-gray-500">{result.message}</p>
+        )}
+
+        <button
+          onClick={onClose}
+          className="w-full rounded-full bg-black py-2.5 text-sm font-bold text-white hover:opacity-90"
+        >
+          Done
+        </button>
+      </motion.div>
+    </div>
   );
 }

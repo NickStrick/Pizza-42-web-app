@@ -3,6 +3,8 @@ import { auth0 } from '@/lib/auth0';
 import { appendOrderToUserProfile } from '@/lib/auth0-management';
 
 const REQUIRED_SCOPE = 'place:orders';
+const PICKUP_LOCATION = 'Pizza 42 · 4200 Main St, Springfield';
+const PREP_TIME_MINUTES = 30;
 
 export async function POST(request: Request) {
   try {
@@ -51,6 +53,8 @@ export async function POST(request: Request) {
       date: new Date().toISOString(),
       items,
       total,
+      location: PICKUP_LOCATION,
+      readyAt: new Date(Date.now() + PREP_TIME_MINUTES * 60 * 1000).toISOString(),
     };
 
     // Requirement 4: persist the order into the user's app_metadata.

@@ -7,4 +7,6 @@ export type OrderHistoryEntry = {
   date: string;
   items: { name: string; qty: number }[];
   total: number;
+  location: string;
+  readyAt: string;
 };

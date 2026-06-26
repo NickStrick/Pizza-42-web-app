@@ -6,13 +6,14 @@ import Link from "next/link";
 import { AnimatePresence, motion } from "framer-motion";
 import { useUser } from "@auth0/nextjs-auth0/client";
 import { useCart } from "@/context/CartContext";
-import { ORDER_HISTORY_CLAIM, type OrderHistoryEntry } from "@/lib/claims";
+import { useOrderHistory } from "@/context/OrderHistoryContext";
+import type { OrderHistoryEntry } from "@/lib/claims";
 
 export default function Header() {
   const { user, isLoading } = useUser();
   const { totalCount, openCart } = useCart();
+  const { orderHistory } = useOrderHistory();
   const [showOrders, setShowOrders] = useState(false);
-  const orderHistory: OrderHistoryEntry[] = user?.[ORDER_HISTORY_CLAIM] ?? [];
 
   return (
     <motion.header
@@ -68,18 +69,7 @@ export default function Header() {
                   ) : (
                     <ul className="flex max-h-64 flex-col gap-2 overflow-y-auto">
                       {orderHistory.map((order) => (
-                        <li key={order.orderId} className="text-sm text-gray-700">
-                          <div className="flex justify-between font-semibold text-gray-900">
-                            <span>{order.orderId}</span>
-                            <span>${order.total.toFixed(2)}</span>
-                          </div>
-                          <p className="text-xs text-gray-500">
-                            {new Date(order.date).toLocaleString()}
-                          </p>
-                          <p className="text-xs text-gray-500">
-                            {order.items.map((i) => `${i.qty}x ${i.name}`).join(", ")}
-                          </p>
-                        </li>
+                        <OrderHistoryItem key={order.orderId} order={order} />
                       ))}
                     </ul>
                   )}
@@ -123,5 +113,32 @@ export default function Header() {
         </button>
       </div>
     </motion.header>
+  );
+}
+
+function OrderHistoryItem({ order }: { order: OrderHistoryEntry }) {
+  const [showDetails, setShowDetails] = useState(false);
+
+  return (
+    <li className="text-sm text-gray-700">
+      <div className="flex justify-between">
+        <span className="font-semibold text-gray-900">
+          {order.items.map((i) => `${i.qty}x ${i.name}`).join(", ")}
+        </span>
+        <span className="font-semibold text-gray-900">${order.total.toFixed(2)}</span>
+      </div>
+      <p className="text-xs text-gray-500">{new Date(order.date).toLocaleString()}</p>
+
+      <button
+        onClick={() => setShowDetails((open) => !open)}
+        className="mt-1 text-xs font-semibold text-gray-500 hover:text-red-600"
+      >
+        {showDetails ? "Hide details" : "Details"}
+      </button>
+
+      {showDetails && (
+        <p className="mt-1 text-xs text-gray-400">Order ID: {order.orderId}</p>
+      )}
+    </li>
   );
 }

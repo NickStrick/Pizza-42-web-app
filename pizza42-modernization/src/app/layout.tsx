@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import { Auth0Provider } from "@auth0/nextjs-auth0/client";
 import { CartProvider } from "@/context/CartContext";
+import { OrderHistoryProvider } from "@/context/OrderHistoryContext";
 import Header from "@/components/Header";
 import CartDrawer from "@/components/CartDrawer";
 import "./globals.css";
@@ -25,11 +26,13 @@ export default function RootLayout({
     <html lang="en">
       <body className={inter.className} suppressHydrationWarning>
         <Auth0Provider>
-          <CartProvider>
-            <Header />
-            {children}
-            <CartDrawer />
-          </CartProvider>
+          <OrderHistoryProvider>
+            <CartProvider>
+              <Header />
+              {children}
+              <CartDrawer />
+            </CartProvider>
+          </OrderHistoryProvider>
         </Auth0Provider>
       </body>
     </html>
