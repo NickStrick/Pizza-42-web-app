@@ -54,7 +54,7 @@ export default function Header() {
             </span>
             <button
               onClick={() => setShowOrders((open) => !open)}
-              className="flex items-center gap-1.5 text-sm font-semibold text-gray-700 hover:text-red-600"
+              className="relative flex items-center gap-1.5 text-sm font-semibold text-gray-700 hover:text-red-600"
             >
               Orders
               <FontAwesomeIcon
@@ -79,7 +79,7 @@ export default function Header() {
                   className="absolute right-0 top-10 z-50 w-72 rounded-lg border border-gray-200 bg-white p-3 shadow-lg"
                 >
                   <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-gray-500">
-                    Order History
+                    Order History ({orderHistory.length})
                   </p>
                   {orderHistory.length === 0 ? (
                     <p className="text-sm text-gray-500">No past orders yet.</p>
