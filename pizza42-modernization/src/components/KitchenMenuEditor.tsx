@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Image from "next/image";
 import type { MenuItem } from "@/data/menu";
 
 export default function KitchenMenuEditor({ initialMenu }: { initialMenu: MenuItem[] }) {
@@ -41,12 +42,22 @@ export default function KitchenMenuEditor({ initialMenu }: { initialMenu: MenuIt
         <p className="mb-4 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-600">{error}</p>
       )}
 
+      <div className="flex items-center justify-between gap-4 px-1 pb-2">
+        <span className="text-xs font-semibold uppercase tracking-wide text-gray-400">Item</span>
+        <span className="text-xs font-semibold uppercase tracking-wide text-gray-400">In Stock</span>
+      </div>
+
       <ul className="flex flex-col divide-y divide-gray-100">
         {menu.map((item) => (
           <li key={item.id} className="flex items-center justify-between gap-4 py-3">
-            <div>
-              <p className="font-semibold text-gray-900">{item.name}</p>
-              <p className="text-sm text-gray-500">${item.price.toFixed(2)} · {item.category}</p>
+            <div className="flex items-center gap-3">
+              <div className="relative h-12 w-12 shrink-0 overflow-hidden rounded-lg">
+                <Image src={item.image} alt={item.name} fill className="object-cover" />
+              </div>
+              <div>
+                <p className="font-semibold text-gray-900">{item.name}</p>
+                <p className="text-sm text-gray-500">${item.price.toFixed(2)} · {item.category}</p>
+              </div>
             </div>
 
             <button

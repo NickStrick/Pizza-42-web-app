@@ -15,7 +15,6 @@ export default function Header() {
   const { orderHistory } = useOrderHistory();
   const [showOrders, setShowOrders] = useState(false);
   const isChef = (user?.[ROLES_CLAIM] ?? []).includes(PIZZA_CHEF_ROLE);
-  console.log("Is Chef:", isChef, PIZZA_CHEF_ROLE, user?.[ROLES_CLAIM]);
   return (
     <motion.header
       initial={{ y: -24, opacity: 0 }}
@@ -23,16 +22,27 @@ export default function Header() {
       transition={{ duration: 0.4, ease: "easeOut" }}
       className="sticky top-0 z-40 flex items-center justify-between border-b border-gray-200 bg-white px-6 py-3"
     >
-      <Link href="/" className="flex items-center">
-        <Image
-          src="/pizza42textsliceinline.png"
-          alt="Pizza 42"
-          width={171}
-          height={60}
-          className="h-10 w-auto"
-          priority
-        />
-      </Link>
+      <div className="flex items-center gap-5">
+        <Link href="/" className="flex items-center">
+          <Image
+            src="/pizza42textsliceinline.png"
+            alt="Pizza 42"
+            width={171}
+            height={60}
+            className="h-10 w-auto"
+            priority
+          />
+        </Link>
+
+        {isChef && (
+          <Link
+            href="/kitchen"
+            className="text-sm font-semibold text-gray-700 hover:text-red-600"
+          >
+            Kitchen
+          </Link>
+        )}
+      </div>
 
       <div className="flex items-center gap-5">
         {!isLoading && user ? (
@@ -40,14 +50,6 @@ export default function Header() {
             <span className="hidden text-sm text-gray-700 sm:inline">
               Hi, {user.name?.split(" ")[0] ?? "there"}
             </span>
-            {isChef && (
-              <Link
-                href="/kitchen"
-                className="text-sm font-semibold text-gray-700 hover:text-red-600"
-              >
-                Kitchen
-              </Link>
-            )}
             <button
               onClick={() => setShowOrders((open) => !open)}
               className="text-sm font-semibold text-gray-700 hover:text-red-600"
