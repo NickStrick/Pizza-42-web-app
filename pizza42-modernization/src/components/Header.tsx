@@ -1,14 +1,18 @@
 "use client";
 
+import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { motion } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
 import { useUser } from "@auth0/nextjs-auth0/client";
 import { useCart } from "@/context/CartContext";
+import { ORDER_HISTORY_CLAIM, type OrderHistoryEntry } from "@/lib/claims";
 
 export default function Header() {
   const { user, isLoading } = useUser();
   const { totalCount, openCart } = useCart();
+  const [showOrders, setShowOrders] = useState(false);
+  const orderHistory: OrderHistoryEntry[] = user?.[ORDER_HISTORY_CLAIM] ?? [];
 
   return (
     <motion.header
@@ -30,16 +34,58 @@ export default function Header() {
 
       <div className="flex items-center gap-5">
         {!isLoading && user ? (
-          <div className="flex items-center gap-3">
+          <div className="relative flex items-center gap-3">
             <span className="hidden text-sm text-gray-700 sm:inline">
               Hi, {user.name?.split(" ")[0] ?? "there"}
             </span>
+            <button
+              onClick={() => setShowOrders((open) => !open)}
+              className="text-sm font-semibold text-gray-700 hover:text-red-600"
+            >
+              Orders ({orderHistory.length})
+            </button>
             <a
               href="/auth/logout"
               className="text-sm font-semibold text-gray-700 hover:text-red-600"
             >
               Sign out
             </a>
+
+            <AnimatePresence>
+              {showOrders && (
+                <motion.div
+                  initial={{ opacity: 0, y: -8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -8 }}
+                  transition={{ duration: 0.15 }}
+                  className="absolute right-0 top-10 z-50 w-72 rounded-lg border border-gray-200 bg-white p-3 shadow-lg"
+                >
+                  <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-gray-500">
+                    Order History
+                  </p>
+                  {orderHistory.length === 0 ? (
+                    <p className="text-sm text-gray-500">No past orders yet.</p>
+                  ) : (
+                    <ul className="flex max-h-64 flex-col gap-2 overflow-y-auto">
+                      {orderHistory.map((order) => (
+                        <li key={order.orderId} className="text-sm text-gray-700">
+                          <div className="flex justify-between font-semibold text-gray-900">
+                            <span>{order.orderId}</span>
+                            <span>${order.total.toFixed(2)}</span>
+                          </div>
+                          <p className="text-xs text-gray-500">
+                            {new Date(order.date).toLocaleString()}
+                          </p>
+                          <p className="text-xs text-gray-500">
+                            {order.items.map((i) => `${i.qty}x ${i.name}`).join(", ")}
+                          </p>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </motion.div>
+              )}
+            </AnimatePresence>
           </div>
         ) : (
           <a
