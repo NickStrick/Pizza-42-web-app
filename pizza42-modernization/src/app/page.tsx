@@ -1,5 +1,6 @@
 import Hero from "@/components/Hero";
 import MenuSection from "@/components/MenuSection";
+import LoyaltyBanner from "@/components/LoyaltyBanner";
 import { auth0 } from "@/lib/auth0";
 
 export default async function Home() {
@@ -14,6 +15,7 @@ export default async function Home() {
           ⚠️ Your email address is unverified. Please check your inbox to unlock checkout privileges.
         </div>
       )}
+      <LoyaltyBanner className="border-b border-amber-200" />
       <Hero />
       <MenuSection />
     </main>

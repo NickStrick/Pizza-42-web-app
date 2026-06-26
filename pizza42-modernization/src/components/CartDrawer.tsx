@@ -5,7 +5,8 @@ import { AnimatePresence, motion } from "framer-motion";
 import { useUser } from "@auth0/nextjs-auth0/client";
 import { useCart } from "@/context/CartContext";
 import { useOrderHistory } from "@/context/OrderHistoryContext";
-import type { OrderHistoryEntry } from "@/lib/claims";
+import LoyaltyBanner from "@/components/LoyaltyBanner";
+import { GOLD_DISCOUNT_RATE, GOLD_TIER, LOYALTY_TIER_CLAIM, type OrderHistoryEntry } from "@/lib/claims";
 
 type OrderResult =
   | { status: "success"; order: OrderHistoryEntry }
@@ -18,6 +19,10 @@ export default function CartDrawer() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [orderResult, setOrderResult] = useState<OrderResult | null>(null);
 
+  const isGold = user?.[LOYALTY_TIER_CLAIM] === GOLD_TIER;
+  const discount = isGold ? subtotal * GOLD_DISCOUNT_RATE : 0;
+  const total = subtotal - discount;
+
   const handleCheckout = async () => {
     setIsSubmitting(true);
     try {
@@ -26,7 +31,7 @@ export default function CartDrawer() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           items: lines.map((l) => ({ name: l.item.name, qty: l.quantity })),
-          total: subtotal,
+          total,
         }),
       });
 
@@ -110,9 +115,23 @@ export default function CartDrawer() {
             </div>
 
             <div className="border-t border-gray-200 px-5 py-4">
-              <div className="mb-4 flex items-center justify-between text-base font-bold text-gray-900">
+              <LoyaltyBanner className="mb-3 rounded-lg text-xs" />
+
+              <div className="mb-1 flex items-center justify-between text-sm text-gray-500">
                 <span>Subtotal</span>
                 <span>${subtotal.toFixed(2)}</span>
+              </div>
+
+              {isGold && (
+                <div className="mb-1 flex items-center justify-between text-sm font-semibold text-amber-600">
+                  <span>Gold discount (10%)</span>
+                  <span>-${discount.toFixed(2)}</span>
+                </div>
+              )}
+
+              <div className="mb-4 flex items-center justify-between text-base font-bold text-gray-900">
+                <span>Total</span>
+                <span>${total.toFixed(2)}</span>
               </div>
 
               {user ? (
@@ -124,7 +143,7 @@ export default function CartDrawer() {
                   {isSubmitting
                     ? "Processing Order..."
                     : user.email_verified
-                      ? `Place Order · $${subtotal.toFixed(2)}`
+                      ? `Place Order · $${total.toFixed(2)}`
                       : "Verify Email to Place Order 🔒"}
                 </button>
               ) : (
