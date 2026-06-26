@@ -7,14 +7,15 @@ import { AnimatePresence, motion } from "framer-motion";
 import { useUser } from "@auth0/nextjs-auth0/client";
 import { useCart } from "@/context/CartContext";
 import { useOrderHistory } from "@/context/OrderHistoryContext";
-import type { OrderHistoryEntry } from "@/lib/claims";
+import { PIZZA_CHEF_ROLE, ROLES_CLAIM, type OrderHistoryEntry } from "@/lib/claims";
 
 export default function Header() {
   const { user, isLoading } = useUser();
   const { totalCount, openCart } = useCart();
   const { orderHistory } = useOrderHistory();
   const [showOrders, setShowOrders] = useState(false);
-
+  const isChef = (user?.[ROLES_CLAIM] ?? []).includes(PIZZA_CHEF_ROLE);
+  console.log("Is Chef:", isChef, PIZZA_CHEF_ROLE, user?.[ROLES_CLAIM]);
   return (
     <motion.header
       initial={{ y: -24, opacity: 0 }}
@@ -39,6 +40,14 @@ export default function Header() {
             <span className="hidden text-sm text-gray-700 sm:inline">
               Hi, {user.name?.split(" ")[0] ?? "there"}
             </span>
+            {isChef && (
+              <Link
+                href="/kitchen"
+                className="text-sm font-semibold text-gray-700 hover:text-red-600"
+              >
+                Kitchen
+              </Link>
+            )}
             <button
               onClick={() => setShowOrders((open) => !open)}
               className="text-sm font-semibold text-gray-700 hover:text-red-600"

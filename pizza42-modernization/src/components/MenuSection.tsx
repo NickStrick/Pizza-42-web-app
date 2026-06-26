@@ -1,9 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Image from "next/image";
 import { motion, Variants } from "framer-motion";
-import { categories, categoryEmoji, menu, MenuItem } from "@/data/menu";
+import { categories, categoryEmoji, defaultMenu, MenuItem } from "@/data/menu";
 import { useCart } from "@/context/CartContext";
 
 const gridVariants: Variants = {
@@ -20,7 +20,15 @@ const itemVariants: Variants = {
 
 export default function MenuSection() {
   const [activeCategory, setActiveCategory] = useState<string>(categories[0]);
+  const [menu, setMenu] = useState<MenuItem[]>(defaultMenu);
   const { addItem } = useCart();
+
+  useEffect(() => {
+    fetch("/api/menu")
+      .then((res) => res.json())
+      .then((data) => setMenu(data.menu))
+      .catch(() => {});
+  }, []);
 
   const items = menu.filter((item) => item.category === activeCategory);
 
@@ -60,42 +68,69 @@ export default function MenuSection() {
 }
 
 function MenuItemCard({ item, onAdd }: { item: MenuItem; onAdd: () => void }) {
+  const soldOut = !item.available;
+
   return (
     <motion.div
       variants={itemVariants}
-      whileHover={{ scale: 1.02, y: -4, boxShadow: "0 12px 24px -8px rgba(0,0,0,0.18)" }}
-      whileTap={{ scale: 0.99 }}
+      whileHover={soldOut ? undefined : { scale: 1.02, y: -4, boxShadow: "0 12px 24px -8px rgba(0,0,0,0.18)" }}
+      whileTap={soldOut ? undefined : { scale: 0.99 }}
       transition={{ duration: 0.2, ease: "easeOut" }}
-      onClick={onAdd}
+      onClick={soldOut ? undefined : onAdd}
       role="button"
-      aria-label={`Add ${item.name}`}
-      className="flex cursor-pointer items-center gap-4 rounded-2xl border border-gray-200 p-4"
+      aria-disabled={soldOut}
+      aria-label={soldOut ? `${item.name} (sold out)` : `Add ${item.name}`}
+      className={`relative flex items-center gap-4 rounded-2xl border border-gray-200 p-4 ${
+        soldOut ? "cursor-not-allowed bg-gray-100" : "cursor-pointer bg-white"
+      }`}
     >
       <div className="flex-1">
-        <h3 className="font-bold text-gray-900">{item.name}</h3>
-        <p className="mt-1 text-sm text-gray-500 line-clamp-2">{item.description}</p>
-        <p className="mt-2 text-sm font-semibold text-gray-900">
+        <h3 className={`font-bold ${soldOut ? "text-gray-400" : "text-gray-900"}`}>{item.name}</h3>
+        <p className={`mt-1 text-sm line-clamp-2 ${soldOut ? "text-gray-400" : "text-gray-500"}`}>
+          {item.description}
+        </p>
+        <p className={`mt-2 text-sm font-semibold ${soldOut ? "text-gray-400" : "text-gray-900"}`}>
           ${item.price.toFixed(2)}
         </p>
       </div>
 
-      <motion.div
-        whileHover={{ scale: 1.08 }}
-        transition={{ duration: 0.2, ease: "easeOut" }}
-        className="relative h-20 w-20 shrink-0 overflow-hidden rounded-xl"
-      >
-        <Image src={item.image} alt={item.name} fill className="object-cover" />
-        <button
-          onClick={(e) => {
-            e.stopPropagation();
-            onAdd();
-          }}
-          aria-label={`Add ${item.name}`}
-          className="absolute bottom-1 right-1 flex h-7 w-7 items-center justify-center rounded-full bg-white text-base font-bold text-gray-900 shadow"
+      <div className="flex shrink-0 flex-col items-center gap-1.5">
+        {soldOut && (
+          <div className="text-center">
+            <span className="rounded-full bg-gray-900 px-2 py-0.5 text-xs font-bold text-white">
+              Sold Out
+            </span>
+            <p className="mt-1 w-20 text-[10px] leading-tight text-gray-500">
+              Check back later
+            </p>
+          </div>
+        )}
+
+        <motion.div
+          whileHover={soldOut ? undefined : { scale: 1.08 }}
+          transition={{ duration: 0.2, ease: "easeOut" }}
+          className="relative h-20 w-20 shrink-0 overflow-hidden rounded-xl"
         >
-          +
-        </button>
-      </motion.div>
+          <Image
+            src={item.image}
+            alt={item.name}
+            fill
+            className={`object-cover ${soldOut ? "grayscale" : ""}`}
+          />
+          {!soldOut && (
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onAdd();
+              }}
+              aria-label={`Add ${item.name}`}
+              className="absolute bottom-1 right-1 flex h-7 w-7 items-center justify-center rounded-full bg-white text-base font-bold text-gray-900 shadow"
+            >
+              +
+            </button>
+          )}
+        </motion.div>
+      </div>
     </motion.div>
   );
 }

@@ -5,9 +5,13 @@ export type MenuItem = {
   price: number;
   image: string;
   category: "Pizza" | "Sides" | "Drinks";
+  available: boolean;
 };
 
-export const menu: MenuItem[] = [
+// Seed data: used to bootstrap menu.json in S3 the first time, and as a
+// fallback if the bucket is ever unreachable. Items start available; the S3
+// copy is the live source of truth for the `available` flag after that.
+const seedMenu: Omit<MenuItem, "available">[] = [
   {
     id: "cheese",
     name: "Cheese Pizza",
@@ -152,6 +156,8 @@ export const menu: MenuItem[] = [
     category: "Drinks",
   },
 ];
+
+export const defaultMenu: MenuItem[] = seedMenu.map((item) => ({ ...item, available: true }));
 
 export const categories = ["Pizza", "Sides", "Drinks"] as const;
 

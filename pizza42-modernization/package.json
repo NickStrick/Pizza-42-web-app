@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@auth0/nextjs-auth0": "^4.22.0",
+    "@aws-sdk/client-s3": "^3.1075.0",
     "framer-motion": "^12.40.0",
     "next": "16.2.9",
     "react": "19.2.4",
