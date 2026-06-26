@@ -4,6 +4,8 @@ import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { AnimatePresence, motion } from "framer-motion";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faChevronDown } from "@fortawesome/free-solid-svg-icons";
 import { useUser } from "@auth0/nextjs-auth0/client";
 import { useCart } from "@/context/CartContext";
 import { useOrderHistory } from "@/context/OrderHistoryContext";
@@ -52,9 +54,13 @@ export default function Header() {
             </span>
             <button
               onClick={() => setShowOrders((open) => !open)}
-              className="text-sm font-semibold text-gray-700 hover:text-red-600"
+              className="flex items-center gap-1.5 text-sm font-semibold text-gray-700 hover:text-red-600"
             >
-              Orders ({orderHistory.length})
+              Orders
+              <FontAwesomeIcon
+                icon={faChevronDown}
+                className={`text-xs transition-transform ${showOrders ? "rotate-180" : ""}`}
+              />
             </button>
             <a
               href="/auth/logout"
