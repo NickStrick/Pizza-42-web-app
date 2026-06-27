@@ -10,10 +10,11 @@ export default function KitchenMenuEditor({ initialMenu }: { initialMenu: MenuIt
   const [error, setError] = useState<string | null>(null);
 
   const toggleAvailability = async (id: string) => {
-    const updatedMenu = menu.map((item) =>
-      item.id === id ? { ...item, available: !item.available } : item
-    );
-    setMenu(updatedMenu);
+    const target = menu.find((item) => item.id === id);
+    if (!target) return;
+    const nextAvailable = !target.available;
+
+    setMenu((prev) => prev.map((item) => (item.id === id ? { ...item, available: nextAvailable } : item)));
     setSavingId(id);
     setError(null);
 
@@ -21,15 +22,18 @@ export default function KitchenMenuEditor({ initialMenu }: { initialMenu: MenuIt
       const response = await fetch("/api/menu", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ menu: updatedMenu }),
+        body: JSON.stringify({ id, available: nextAvailable }),
       });
+      const data = await response.json();
       if (!response.ok) {
-        const data = await response.json();
         throw new Error(data.error ?? "Failed to save menu");
       }
+      // Adopt the server's copy so any fields we don't track locally
+      // (like totalOrdered) stay accurate after the round trip.
+      setMenu(data.menu);
     } catch (err) {
       // Roll back the optimistic toggle if the S3 write failed.
-      setMenu(menu);
+      setMenu((prev) => prev.map((item) => (item.id === id ? { ...item, available: target.available } : item)));
       setError(err instanceof Error ? err.message : "Failed to save menu");
     } finally {
       setSavingId(null);

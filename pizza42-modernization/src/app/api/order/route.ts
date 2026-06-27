@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { auth0 } from '@/lib/auth0';
 import { appendOrderToUserProfile } from '@/lib/auth0-management';
+import { recordOrderedItems } from '@/lib/s3';
 
 const REQUIRED_SCOPE = 'place:orders';
 const PICKUP_LOCATION = 'Pizza 42 · 4200 Main St, Springfield';
@@ -59,6 +60,9 @@ export async function POST(request: Request) {
 
     // Requirement 4: persist the order into the user's app_metadata.
     await appendOrderToUserProfile(user.sub, order);
+
+    // Feeds the Menu Analytics dashboard's "most ordered" chart.
+    await recordOrderedItems(items);
 
     return NextResponse.json(
       { success: true, message: 'Pizza 42 order placed successfully!', order },

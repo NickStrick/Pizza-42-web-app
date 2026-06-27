@@ -19,11 +19,21 @@ export async function PUT(request: Request) {
     );
   }
 
-  const { menu } = await request.json();
-  if (!Array.isArray(menu)) {
-    return NextResponse.json({ error: 'Bad Request: expected { menu: MenuItem[] }' }, { status: 400 });
+  const { id, available } = await request.json();
+  if (typeof id !== 'string' || typeof available !== 'boolean') {
+    return NextResponse.json(
+      { error: 'Bad Request: expected { id: string, available: boolean }' },
+      { status: 400 }
+    );
   }
 
-  await putMenuToS3(menu);
-  return NextResponse.json({ success: true, menu });
+  // Patch a single item against a freshly-read copy of the menu, rather than
+  // accepting a client-supplied full menu array — the client's copy may be
+  // stale (e.g. orders placed since the dashboard loaded), and overwriting
+  // the whole document would silently wipe out fields like totalOrdered.
+  const menu = await getMenuFromS3();
+  const updatedMenu = menu.map((item) => (item.id === id ? { ...item, available } : item));
+  await putMenuToS3(updatedMenu);
+
+  return NextResponse.json({ success: true, menu: updatedMenu });
 }

@@ -30,3 +30,23 @@ export async function putMenuToS3(menu: MenuItem[]): Promise<void> {
     })
   );
 }
+
+// Orders only carry item names + quantities (not ids), so we match on name
+// to bump each item's running order count for the Menu Analytics page.
+export async function recordOrderedItems(items: { name: string; qty: number }[]): Promise<void> {
+  const menu = await getMenuFromS3();
+
+  // TEMPORARY DEBUG: confirm every ordered item actually matches a menu
+  // entry by name. Remove once we've root-caused the undercount.
+  const menuNames = new Set(menu.map((m) => m.name));
+  const unmatched = items.filter((item) => !menuNames.has(item.name));
+  console.log('[recordOrderedItems] ordered:', items);
+  console.log('[recordOrderedItems] menu item count from S3:', menu.length);
+  console.log('[recordOrderedItems] unmatched items (will NOT be counted):', unmatched);
+
+  const updatedMenu = menu.map((menuItem) => {
+    const ordered = items.find((item) => item.name === menuItem.name);
+    return ordered ? { ...menuItem, totalOrdered: menuItem.totalOrdered + ordered.qty } : menuItem;
+  });
+  await putMenuToS3(updatedMenu);
+}

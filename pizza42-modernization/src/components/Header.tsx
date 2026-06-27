@@ -37,12 +37,20 @@ export default function Header() {
         </Link>
 
         {isChef && (
-          <Link
-            href="/kitchen"
-            className="text-sm font-semibold text-gray-700 hover:text-red-600"
-          >
-            Kitchen
-          </Link>
+          <>
+            <Link
+              href="/kitchen"
+              className="text-sm font-semibold text-gray-700 hover:text-red-600"
+            >
+              Kitchen
+            </Link>
+            <Link
+              href="/menu-analytics"
+              className="text-sm font-semibold text-gray-700 hover:text-red-600"
+            >
+              Menu Metrics
+            </Link>
+          </>
         )}
       </div>
 
