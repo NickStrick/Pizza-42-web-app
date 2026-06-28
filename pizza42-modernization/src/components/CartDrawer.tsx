@@ -6,6 +6,7 @@ import { useUser } from "@auth0/nextjs-auth0/client";
 import { useCart } from "@/context/CartContext";
 import { useOrderHistory } from "@/context/OrderHistoryContext";
 import LoyaltyBanner from "@/components/LoyaltyBanner";
+import CheckoutModal from "@/components/CheckoutModal";
 import { GOLD_DISCOUNT_RATE, GOLD_TIER, LOYALTY_TIER_CLAIM, type OrderHistoryEntry } from "@/lib/claims";
 
 type OrderResult =
@@ -18,6 +19,7 @@ export default function CartDrawer() {
   const { addOrder } = useOrderHistory();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [orderResult, setOrderResult] = useState<OrderResult | null>(null);
+  const [showCheckout, setShowCheckout] = useState(false);
 
   const isGold = user?.[LOYALTY_TIER_CLAIM] === GOLD_TIER;
   const discount = isGold ? subtotal * GOLD_DISCOUNT_RATE : 0;
@@ -40,6 +42,7 @@ export default function CartDrawer() {
         addOrder(data.order);
         clearCart();
         closeCart();
+        setShowCheckout(false);
         setOrderResult({ status: "success", order: data.order });
       } else {
         setOrderResult({ status: "error", message: data.error });
@@ -137,7 +140,7 @@ export default function CartDrawer() {
               {user ? (
                 <button
                   disabled={lines.length === 0 || !user.email_verified || isSubmitting}
-                  onClick={handleCheckout}
+                  onClick={() => setShowCheckout(true)}
                   className="w-full rounded-full bg-red-600 py-3 text-sm font-bold text-white transition-opacity hover:opacity-90 disabled:opacity-40"
                 >
                   {isSubmitting
@@ -157,6 +160,15 @@ export default function CartDrawer() {
             </div>
           </motion.div>
         </div>
+      )}
+
+      {showCheckout && (
+        <CheckoutModal
+          total={total}
+          isSubmitting={isSubmitting}
+          onSubmit={handleCheckout}
+          onClose={() => setShowCheckout(false)}
+        />
       )}
 
       {orderResult && (
